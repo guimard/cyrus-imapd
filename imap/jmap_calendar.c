@@ -93,59 +93,58 @@ static int jmap_calendarevent_getblob(jmap_req_t *req, const char *blobid,
 #define JMAPCACHE_CALVERSION 19
 
 jmap_method_t jmap_calendar_methods_standard[] = {
-    // we have no standard for JMAP calendars yet!
-    { NULL, NULL, NULL, 0}
-};
-
-jmap_method_t jmap_calendar_methods_nonstandard[] = {
     {
         "Calendar/get",
-        JMAP_CALENDARS_EXTENSION,
+        JMAP_URN_CALENDARS,
         &jmap_calendar_get,
         JMAP_SHARED_CSTATE
     },
     {
         "Calendar/changes",
-        JMAP_CALENDARS_EXTENSION,
+        JMAP_URN_CALENDARS,
         &jmap_calendar_changes,
         JMAP_SHARED_CSTATE
     },
     {
         "Calendar/set",
-        JMAP_CALENDARS_EXTENSION,
+        JMAP_URN_CALENDARS,
         &jmap_calendar_set,
         /*flags*/0
     },
     {
         "CalendarEvent/get",
-        JMAP_CALENDARS_EXTENSION,
+        JMAP_URN_CALENDARS,
         &jmap_calendarevent_get,
         JMAP_SHARED_CSTATE
     },
     {
         "CalendarEvent/changes",
-        JMAP_CALENDARS_EXTENSION,
+        JMAP_URN_CALENDARS,
         &jmap_calendarevent_changes,
         JMAP_SHARED_CSTATE
     },
     {
         "CalendarEvent/query",
-        JMAP_CALENDARS_EXTENSION,
+        JMAP_URN_CALENDARS,
         &jmap_calendarevent_query,
         JMAP_SHARED_CSTATE
     },
     {
         "CalendarEvent/set",
-        JMAP_CALENDARS_EXTENSION,
+        JMAP_URN_CALENDARS,
         &jmap_calendarevent_set,
         /*flags*/0
     },
     {
         "CalendarEvent/copy",
-        JMAP_CALENDARS_EXTENSION,
+        JMAP_URN_CALENDARS,
         &jmap_calendarevent_copy,
         /*flags*/0
     },
+    { NULL, NULL, NULL, 0}
+};
+
+jmap_method_t jmap_calendar_methods_nonstandard[] = {
     { NULL, NULL, NULL, 0}
 };
 
@@ -156,6 +155,9 @@ HIDDEN void jmap_calendar_init(jmap_settings_t *settings)
     for (mp = jmap_calendar_methods_standard; mp->name; mp++) {
         hash_insert(mp->name, mp, &settings->methods);
     }
+
+    json_object_set_new(settings->server_capabilities,
+            JMAP_URN_CALENDARS, json_object());
 
     if (config_getswitch(IMAPOPT_JMAP_NONSTANDARD_EXTENSIONS)) {
         json_object_set_new(settings->server_capabilities,
@@ -171,6 +173,8 @@ HIDDEN void jmap_calendar_init(jmap_settings_t *settings)
 
 HIDDEN void jmap_calendar_capabilities(json_t *account_capabilities)
 {
+    json_object_set_new(account_capabilities, JMAP_URN_CALENDARS, json_object());
+
     if (config_getswitch(IMAPOPT_JMAP_NONSTANDARD_EXTENSIONS)) {
         json_object_set_new(account_capabilities, JMAP_CALENDARS_EXTENSION, json_object());
     }
