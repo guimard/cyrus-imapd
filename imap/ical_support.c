@@ -53,6 +53,7 @@
 #include "message.h"
 #include "strhash.h"
 #include "util.h"
+#include "icu_wrap.h"
 
 #ifdef HAVE_ICAL
 
@@ -1991,5 +1992,33 @@ EXPORTED icalparameter *icalparameter_new_schedulestatus(const char *stat)
 #endif /* HAVE_SCHEDULING_PARAMS */
 
 #endif /* HAVE_IANA_PARAMS */
+
+EXPORTED icaltimezone *icaltimezone_lookup_tzid(const char *tzid)
+{
+    icaltimezone *tz = NULL;
+
+    if (!tzid)
+        return NULL;
+
+    /* libical doesn't return the UTC singleton for Etc/UTC */
+    if (!strcmp(tzid, "Etc/UTC") || !strcmp(tzid, "UTC"))
+        return icaltimezone_get_utc_timezone();
+
+    tz = icaltimezone_get_builtin_timezone(tzid);
+
+    if (!tz) {
+        /* see if its a MS Windows TZID */
+        char *my_tzid = icu_getIDForWindowsID(tzid);
+
+        if (!my_tzid) return NULL;
+
+        tz = icaltimezone_get_builtin_timezone(my_tzid);
+
+        free(my_tzid);
+    }
+
+    return tz;
+}
+
 
 #endif /* HAVE_ICAL */
